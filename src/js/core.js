@@ -1,46 +1,32 @@
-;(function ($, window, document, undefined) {
+import Templates from 'templates'
+import Constants from 'constants'
 
-    'use strict';
+/**
+ * Capitalize first character
+ *
+ * @param {string} str
+ * @return {string}
+ */
+function ucfirst (str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
 
-    /** Default values */
-    var pluginName = 'mediumInsert',
-        defaults = {
-            editor: null,
-            enabled: true,
-            addons: {
-                images: true, // boolean or object containing configuration
-                embeds: true
-            }
-        };
-
-    /**
-     * Capitalize first character
-     *
-     * @param {string} str
-     * @return {string}
-     */
-
-    function ucfirst (str) {
-        return str.charAt(0).toUpperCase() + str.slice(1);
-    }
-
-    /**
-     * Core plugin's object
-     *
-     * Sets options, variables and calls init() function
-     *
-     * @constructor
-     * @param {DOM} el - DOM element to init the plugin on
-     * @param {object} options - Options to override defaults
-     * @return {void}
-     */
-
-    function Core (el, options) {
+/**
+ * Core plugin's object
+ *
+ * Sets options, variables and calls init() function
+ *
+ * @constructor
+ * @param {DOM} el - DOM element to init the plugin on
+ * @param {object} options - Options to override defaults
+ * @return {void}
+ */
+export default class Core {
+    constructor(el, options) {
         var editor;
 
         this.el = el;
         this.$el = $(el);
-        this.templates = window.MediumInsert.Templates;
 
         if (options) {
             // Fix #142
@@ -53,7 +39,7 @@
         this.options.editor = editor;
 
         this._defaults = defaults;
-        this._name = pluginName;
+        this._name = Constants.PLUGIN_NAME;
 
         // Extend editor's functions
         if (this.options && this.options.editor) {
@@ -75,8 +61,7 @@
      *
      * @return {void}
      */
-
-    Core.prototype.init = function () {
+    init() {
         this.$el.addClass('medium-editor-insert-plugin');
 
         if (typeof this.options.addons !== 'object' || Object.keys(this.options.addons).length === 0) {
@@ -86,15 +71,14 @@
         this.initAddons();
         this.clean();
         this.events();
-    };
+    }
 
     /**
      * Event listeners
      *
      * @return {void}
      */
-
-    Core.prototype.events = function () {
+    events() {
         var that = this;
 
         this.$el
@@ -110,25 +94,23 @@
             });
 
         $(window).on('resize', $.proxy(this, 'positionButtons', null));
-    };
+    }
 
     /**
      * Return editor instance
      *
      * @return {object} MediumEditor
      */
-
-    Core.prototype.getEditor = function () {
+    getEditor() {
         return this.options.editor;
-    };
+    }
 
     /**
      * Extend editor's serialize function
      *
      * @return {object} Serialized data
      */
-
-    Core.prototype.editorSerialize = function () {
+    editorSerialize() {
         var data = this._serialize();
 
         $.each(data, function (key) {
@@ -140,43 +122,40 @@
         });
 
         return data;
-    };
+    }
 
     /**
      * Extend editor's destroy function to deactivate this plugin too
      *
      * @return {void}
      */
-
-    Core.prototype.editorDestroy = function () {
+    editorDestroy() {
         $.each(this.elements, function (key, el) {
-            $(el).data('plugin_' + pluginName).disable();
+            $(el).data('plugin_' + this._name).disable();
         });
 
         this._destroy();
-    };
+    }
 
     /**
      * Extend editor's setup function to activate this plugin too
      *
      * @return {void}
      */
-
-    Core.prototype.editorSetup = function () {
+    editorSetup() {
         this._setup();
 
         $.each(this.elements, function (key, el) {
-            $(el).data('plugin_' + pluginName).enable();
+            $(el).data('plugin_' + this._name).enable();
         });
-    };
+    }
 
     /**
      * Extend editor's placeholder.updatePlaceholder function to show placeholder dispite of the plugin buttons
      *
      * @return {void}
      */
-
-    Core.prototype.editorUpdatePlaceholder = function (el) {
+    editorUpdatePlaceholder(el) {
         var $clone = $(el).clone(),
             cloneHtml;
 
@@ -191,37 +170,34 @@
         } else {
             this.hidePlaceholder(el);
         }
-    };
+    }
 
     /**
      * Deselects selected text
      *
      * @return {void}
      */
-
-    Core.prototype.deselect = function () {
+    deselect() {
         document.getSelection().removeAllRanges();
-    };
+    }
 
     /**
      * Disables the plugin
      *
      * @return {void}
      */
-
-    Core.prototype.disable = function () {
+    disable() {
         this.options.enabled = false;
 
         this.$el.find('.medium-insert-buttons').addClass('hide');
-    };
+    }
 
     /**
      * Enables the plugin
      *
      * @return {void}
      */
-
-    Core.prototype.enable = function () {
+    enable() {
         this.options.enabled = true;
 
         this.$el.find('.medium-insert-buttons').removeClass('hide');
@@ -232,22 +208,20 @@
      *
      * @return {void}
      */
-
-    Core.prototype.disableSelection = function (e) {
+    disableSelection(e) {
         var $el = $(e.target);
 
         if ($el.is('img') === false || $el.hasClass('medium-insert-buttons-show')) {
             e.preventDefault();
         }
-    };
+    }
 
     /**
      * Initialize addons
      *
      * @return {void}
      */
-
-    Core.prototype.initAddons = function () {
+    initAddons() {
         var that = this;
 
         if (!this.options.addons || this.options.addons.length === 0) {
@@ -255,7 +229,7 @@
         }
 
         $.each(this.options.addons, function (addon, options) {
-            var addonName = pluginName + ucfirst(addon);
+            var addonName = this._name + ucfirst(addon);
 
             if (options === false) {
                 delete that.options.addons[addon];
@@ -263,17 +237,16 @@
             }
 
             that.$el[addonName](options);
-            that.options.addons[addon] = that.$el.data('plugin_'+ addonName).options;
-        });
-    };
+            that.options.addons[addon] = that.$el.data('plugin_' + addonName).options;
+        }.bind(this));
+    }
 
     /**
      * Cleans a content of the editor
      *
      * @return {void}
      */
-
-    Core.prototype.clean = function () {
+    clean() {
         var that = this,
             $buttons, $lastEl, $text;
 
@@ -286,7 +259,7 @@
         // To force placeholder to appear, set <p><br></p> as content of the $el
 
         if (this.$el.html().trim() === '' || this.$el.html().trim() === '<br>') {
-            this.$el.html(this.templates['src/js/templates/core-empty-line.hbs']().trim());
+            this.$el.html(Templates['core-empty-line.hbs']().trim());
         }
 
         // Fix #29
@@ -310,45 +283,42 @@
         $buttons = this.$el.find('.medium-insert-buttons');
         $lastEl = $buttons.prev();
         if ($lastEl.attr('class') && $lastEl.attr('class').match(/medium\-insert(?!\-active)/)) {
-            $buttons.before(this.templates['src/js/templates/core-empty-line.hbs']().trim());
+            $buttons.before(Templates['core-empty-line.hbs']().trim());
         }
-    };
+    }
 
     /**
      * Returns HTML template of buttons
      *
      * @return {string} HTML template of buttons
      */
-
-    Core.prototype.getButtons = function () {
+    getButtons() {
         if (this.options.enabled === false) {
             return;
         }
 
-        return this.templates['src/js/templates/core-buttons.hbs']({
+        return Templates['core-buttons.hbs']({
             addons: this.options.addons
         }).trim();
-    };
+    }
 
     /**
      * Appends buttons at the end of the $el
      *
      * @return {void}
      */
-
-    Core.prototype.addButtons = function () {
+    addButtons() {
         if (this.$el.find('.medium-insert-buttons').length === 0) {
             this.$el.append(this.getButtons());
         }
-    };
+    }
 
     /**
      * Move buttons to current active, empty paragraph and show them
      *
      * @return {void}
      */
-
-    Core.prototype.toggleButtons = function (e) {
+    toggleButtons(e) {
         var $el = $(e.target),
             selection = window.getSelection(),
             that = this,
@@ -379,12 +349,12 @@
             this.$el.find('.medium-insert-active').removeClass('medium-insert-active');
 
             $.each(this.options.addons, function (addon) {
-                if ($el.closest('.medium-insert-'+ addon).length) {
+                if ($el.closest('.medium-insert-' + addon).length) {
                     $current = $el;
                 }
 
-                if ($current.closest('.medium-insert-'+ addon).length) {
-                    $p = $current.closest('.medium-insert-'+ addon);
+                if ($current.closest('.medium-insert-' + addon).length) {
+                    $p = $current.closest('.medium-insert-' + addon);
                     activeAddon = addon;
                     return;
                 }
@@ -402,7 +372,7 @@
                 this.hideButtons();
             }
         }
-    };
+    }
 
     /**
      * Show buttons
@@ -410,8 +380,7 @@
      * @param {string} activeAddon - Name of active addon
      * @returns {void}
      */
-
-    Core.prototype.showButtons = function (activeAddon) {
+    showButtons(activeAddon) {
         var $buttons = this.$el.find('.medium-insert-buttons');
 
         $buttons.show();
@@ -419,9 +388,9 @@
 
         if (activeAddon) {
             $buttons.find('li').hide();
-            $buttons.find('a[data-addon="'+ activeAddon +'"]').parent().show();
+            $buttons.find('a[data-addon="' + activeAddon + '"]').parent().show();
         }
-    };
+    }
 
     /**
      * Hides buttons
@@ -429,14 +398,13 @@
      * @param {jQuery} $el - Editor element
      * @returns {void}
      */
-
-    Core.prototype.hideButtons = function ($el) {
+    hideButtons($el) {
         $el = $el || this.$el;
 
         $el.find('.medium-insert-buttons').hide();
         $el.find('.medium-insert-buttons-addons').hide();
         $el.find('.medium-insert-buttons-show').removeClass('medium-insert-buttons-rotate');
-    };
+    }
 
     /**
      * Position buttons
@@ -444,8 +412,7 @@
      * @param {string} activeAddon - Name of active addon
      * @return {void}
      */
-
-    Core.prototype.positionButtons = function (activeAddon) {
+    positionButtons(activeAddon) {
         var $buttons = this.$el.find('.medium-insert-buttons'),
             $p = this.$el.find('.medium-insert-active'),
             $first = $p.find('figure:first').length ? $p.find('figure:first') : $p,
@@ -470,29 +437,27 @@
                 top: top
             });
         }
-    };
+    }
 
     /**
      * Toggles addons buttons
      *
      * @return {void}
      */
-
-    Core.prototype.toggleAddons = function () {
+    toggleAddons() {
         this.$el.find('.medium-insert-buttons-addons').fadeToggle();
         this.$el.find('.medium-insert-buttons-show').toggleClass('medium-insert-buttons-rotate');
-    };
+    }
 
     /**
      * Hide addons buttons
      *
      * @return {void}
      */
-
-    Core.prototype.hideAddons = function () {
+    hideAddons() {
         this.$el.find('.medium-insert-buttons-addons').hide();
         this.$el.find('.medium-insert-buttons-show').removeClass('medium-insert-buttons-rotate');
-    };
+    }
 
     /**
      * Call addon's action
@@ -500,14 +465,13 @@
      * @param {Event} e
      * @return {void}
      */
-
-    Core.prototype.addonAction = function (e) {
+    addonAction(e) {
         var $a = $(e.target).is('a') ? $(e.target) : $(e.target).closest('a'),
             addon = $a.data('addon'),
             action = $a.data('action');
 
-        this.$el.data('plugin_'+ pluginName + ucfirst(addon))[action]();
-    };
+        this.$el.data('plugin_' + this._name + ucfirst(addon))[action]();
+    }
 
     /**
      * Move caret at the beginning of the empty paragraph
@@ -517,8 +481,7 @@
      *
      * @return {void}
      */
-
-    Core.prototype.moveCaret = function ($el, position) {
+    moveCaret($el, position) {
         var range, sel, el;
 
         position = position || 0;
@@ -535,7 +498,7 @@
         range.collapse(true);
         sel.removeAllRanges();
         sel.addRange(range);
-    };
+    }
 
     /**
      * Add caption
@@ -544,16 +507,15 @@
      * @param {string} placeholder
      * @return {void}
      */
-
-    Core.prototype.addCaption = function ($el, placeholder) {
+    addCaption($el, placeholder) {
         var $caption = $el.find('figcaption');
 
         if ($caption.length === 0) {
-            $el.append(this.templates['src/js/templates/core-caption.hbs']({
+            $el.append(Templates['core-caption.hbs']({
                 placeholder: placeholder
             }));
         }
-    };
+    }
 
     /**
      * Remove captions
@@ -561,8 +523,7 @@
      * @param {jQuery Element} $ignore
      * @return {void}
      */
-
-    Core.prototype.removeCaptions = function ($ignore) {
+    removeCaptions($ignore) {
         var $captions = this.$el.find('figcaption');
 
         if ($ignore) {
@@ -574,7 +535,7 @@
                 $(this).remove();
             }
         });
-    };
+    }
 
     /**
      * Remove caption placeholder
@@ -582,8 +543,7 @@
      * @param {jQuery Element} $el
      * @return {void}
      */
-
-    Core.prototype.removeCaptionPlaceholder = function ($el) {
+    removeCaptionPlaceholder($el) {
         var $caption = $el.is('figcaption') ? $el : $el.find('figcaption');
 
         if ($caption.length) {
@@ -591,29 +551,15 @@
                 .removeClass('medium-insert-caption-placeholder')
                 .removeAttr('data-placeholder');
         }
-    };
+    }
+}
 
-    /** Plugin initialization */
 
-    $.fn[pluginName] = function (options) {
-        return this.each(function () {
-            var that = this,
-                textareaId;
-
-            if ($(that).is('textarea')) {
-                textareaId = $(that).attr('medium-editor-textarea-id');
-                that = $(that).siblings('[medium-editor-textarea-id="'+ textareaId +'"]').get(0);
-            }
-
-            if (!$.data(that, 'plugin_' + pluginName)) {
-                // Plugin initialization
-                $.data(that, 'plugin_' + pluginName, new Core(that, options));
-                $.data(that, 'plugin_' + pluginName).init();
-            } else if (typeof options === 'string' && $.data(that, 'plugin_' + pluginName)[options]) {
-                // Method call
-                $.data(that, 'plugin_' + pluginName)[options]();
-            }
-        });
-    };
-
-})(jQuery, window, document);
+let defaults = {
+    editor: null,
+    enabled: true,
+    addons: {
+        images: true, // boolean or object containing configuration
+        embeds: true
+    }
+};

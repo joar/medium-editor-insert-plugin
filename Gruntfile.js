@@ -112,6 +112,7 @@ module.exports = function(grunt) {
         handlebars: {
             compile: {
                 options: {
+                    wrapped: false,
                     namespace: 'MediumInsert.Templates'
                 },
                 files: {

@@ -1,67 +1,26 @@
-;(function ($, window, document, undefined) {
+import Templates from 'templates'
+import Constants from 'constants'
 
-    'use strict';
-
-    /** Default values */
-    var pluginName = 'mediumInsert',
-        addonName = 'Embeds', // first char is uppercase
-        defaults = {
-            label: '<span class="fa fa-youtube-play"></span>',
-            placeholder: 'Paste a YouTube, Vimeo, Facebook, Twitter or Instagram link and press Enter',
-            oembedProxy: 'http://medium.iframe.ly/api/oembed?iframe=1',
-            captions: true,
-            captionPlaceholder: 'Type caption (optional)',
-            styles: {
-                wide: {
-                    label: '<span class="fa fa-align-justify"></span>',
-                    // added: function ($el) {},
-                    // removed: function ($el) {}
-                },
-                left: {
-                    label: '<span class="fa fa-align-left"></span>',
-                    // added: function ($el) {},
-                    // removed: function ($el) {}
-                },
-                right: {
-                    label: '<span class="fa fa-align-right"></span>',
-                    // added: function ($el) {},
-                    // removed: function ($el) {}
-                }
-            },
-            actions: {
-                remove: {
-                    label: '<span class="fa fa-times"></span>',
-                    clicked: function () {
-                        var $event = $.Event('keydown');
-
-                        $event.which = 8;
-                        $(document).trigger($event);
-                    }
-                }
-            }
-        };
-
-    /**
-     * Embeds object
-     *
-     * Sets options, variables and calls init() function
-     *
-     * @constructor
-     * @param {DOM} el - DOM element to init the plugin on
-     * @param {object} options - Options to override defaults
-     * @return {void}
-     */
-
-    function Embeds (el, options) {
+/**
+ * Embeds object
+ *
+ * Sets options, variables and calls init() function
+ *
+ * @constructor
+ * @param {DOM} el - DOM element to init the plugin on
+ * @param {object} options - Options to override defaults
+ * @return {void}
+ */
+export default class Embeds {
+    constructor(el, options) {
+        this._name = Constants.PLUGIN_NAME;
         this.el = el;
         this.$el = $(el);
-        this.templates = window.MediumInsert.Templates;
-        this.core = this.$el.data('plugin_'+ pluginName);
+
+        this.core = this.$el.data('plugin_' + this._name);
 
         this.options = $.extend(true, {}, defaults, options);
-
         this._defaults = defaults;
-        this._name = pluginName;
 
         // Extend editor's functions
         if (this.core.getEditor()) {
@@ -77,9 +36,8 @@
      *
      * @return {void}
      */
-
-    Embeds.prototype.init = function () {
-        var $embeds = this.$el.find('.medium-insert-embeds');
+    init() {
+        let $embeds = this.$el.find('.medium-insert-embeds');
 
         $embeds.attr('contenteditable', false);
         $embeds.each(function () {
@@ -90,15 +48,14 @@
 
         this.events();
         this.backwardsCompatibility();
-    };
+    }
 
     /**
      * Event listeners
      *
      * @return {void}
      */
-
-    Embeds.prototype.events = function () {
+    events() {
         $(document)
             .on('click', $.proxy(this, 'unselectEmbed'))
             .on('keydown', $.proxy(this, 'removeEmbed'))
@@ -110,16 +67,15 @@
             .on('keydown', $.proxy(this, 'processLink'))
             .on('click', '.medium-insert-embeds-overlay', $.proxy(this, 'selectEmbed'))
             .on('contextmenu', '.medium-insert-embeds-placeholder', $.proxy(this, 'fixRightClickOnPlaceholder'));
-    };
+    }
 
     /**
      * Replace v0.* class names with new ones, wrap embedded content to new structure
      *
      * @return {void}
      */
-
-    Embeds.prototype.backwardsCompatibility = function () {
-        var that = this;
+    backwardsCompatibility() {
+        let that = this;
 
         this.$el.find('.mediumInsert-embeds')
             .removeClass('mediumInsert-embeds')
@@ -133,19 +89,18 @@
                 $(this).remove();
             }
         });
-    };
+    }
 
     /**
      * Extend editor's serialize function
      *
      * @return {object} Serialized data
      */
-
-    Embeds.prototype.editorSerialize = function () {
-        var data = this._serializePreEmbeds();
+    editorSerialize() {
+        let data = this._serializePreEmbeds();
 
         $.each(data, function (key) {
-            var $data = $('<div />').html(data[key].value);
+            let $data = $('<div />').html(data[key].value);
 
             $data.find('.medium-insert-embeds').removeAttr('contenteditable');
             $data.find('.medium-insert-embeds-overlay').remove();
@@ -154,36 +109,35 @@
         });
 
         return data;
-    };
+    }
 
     /**
      * Add embedded element
      *
      * @return {void}
      */
-
-    Embeds.prototype.add = function () {
-        var $place = this.$el.find('.medium-insert-active');
+    add() {
+        let $place = this.$el.find('.medium-insert-active');
 
         // Fix #132
         // Make sure that the content of the paragraph is empty and <br> is wrapped in <p></p> to avoid Firefox problems
-        $place.html(this.templates['src/js/templates/core-empty-line.hbs']().trim());
+        $place.html(Templates['core-empty-line.hbs']().trim());
 
         // Replace paragraph with div to prevent #124 issue with pasting in Chrome,
         // because medium editor wraps inserted content into paragraph and paragraphs can't be nested
         if ($place.is('p')) {
-            $place.replaceWith('<div class="medium-insert-active">'+ $place.html() +'</div>');
+            $place.replaceWith('<div class="medium-insert-active">' + $place.html() + '</div>');
             $place = this.$el.find('.medium-insert-active');
             this.core.moveCaret($place);
         }
 
         $place.addClass('medium-insert-embeds medium-insert-embeds-input medium-insert-embeds-active');
 
-        this.togglePlaceholder({ target: $place.get(0) });
+        this.togglePlaceholder({target: $place.get(0)});
 
         $place.click();
         this.core.hideButtons();
-    };
+    }
 
     /**
      * Toggles placeholder
@@ -191,9 +145,8 @@
      * @param {Event} e
      * @return {void}
      */
-
-    Embeds.prototype.togglePlaceholder = function (e) {
-        var $place = $(e.target),
+    togglePlaceholder(e) {
+        let $place = $(e.target),
             selection = window.getSelection(),
             range, $current, text;
 
@@ -227,7 +180,7 @@
         } else {
             this.$el.find('.medium-insert-embeds-active').remove();
         }
-    };
+    }
 
     /**
      * Right click on placeholder in Chrome selects whole line. Fix this by placing caret at the end of line
@@ -235,10 +188,9 @@
      * @param {Event} e
      * @return {void}
      */
-
-    Embeds.prototype.fixRightClickOnPlaceholder = function (e) {
+    fixRightClickOnPlaceholder(e) {
         this.core.moveCaret($(e.target));
-    };
+    }
 
     /**
      * Process link
@@ -246,9 +198,8 @@
      * @param {Event} e
      * @return {void}
      */
-
-    Embeds.prototype.processLink = function (e) {
-        var $place = this.$el.find('.medium-insert-embeds-active'),
+    processLink(e) {
+        let $place = this.$el.find('.medium-insert-embeds-active'),
             url;
 
         if (!$place.length) {
@@ -273,7 +224,7 @@
                 this.parseUrl(url);
             }
         }
-    };
+    }
 
     /**
      * Get HTML via oEmbed proxy
@@ -281,9 +232,8 @@
      * @param {string} url
      * @return {void}
      */
-
-    Embeds.prototype.oembed = function (url) {
-        var that = this;
+    oembed(url) {
+        let that = this;
 
         $.support.cors = true;
 
@@ -295,8 +245,8 @@
             data: {
                 url: url
             },
-            success: function(data) {
-                var html = data && data.html;
+            success: function (data) {
+                let html = data && data.html;
 
                 if (data && !data.html && data.type === 'photo' && data.url) {
                     html = '<img src="' + data.url + '" alt="">';
@@ -304,11 +254,12 @@
 
                 $.proxy(that, 'embed', html)();
             },
-            error: function(jqXHR, textStatus, errorThrown) {
-                var responseJSON = (function() {
+            error: function (jqXHR, textStatus, errorThrown) {
+                let responseJSON = (function () {
                     try {
                         return JSON.parse(jqXHR.responseText);
-                    } catch(e) {}
+                    } catch (e) {
+                    }
                 })();
 
                 if (typeof window.console !== 'undefined') {
@@ -320,7 +271,7 @@
                 $.proxy(that, 'convertBadEmbed', url)();
             }
         });
-    };
+    }
 
     /**
      * Get HTML using regexp
@@ -328,9 +279,8 @@
      * @param {string} url
      * @return {void}
      */
-
-    Embeds.prototype.parseUrl = function (url) {
-        var html;
+    parseUrl(url) {
+        let html;
 
         if (!(new RegExp(['youtube', 'youtu.be', 'vimeo', 'instagram'].join('|')).test(url))) {
             $.proxy(this, 'convertBadEmbed', url)();
@@ -346,7 +296,7 @@
 
 
         this.embed((/<("[^"]*"|'[^']*'|[^'">])*>/).test(html) ? html : false);
-    };
+    }
 
     /**
      * Add html to page
@@ -354,15 +304,14 @@
      * @param {string} html
      * @return {void}
      */
-
-    Embeds.prototype.embed = function (html) {
-        var $place = this.$el.find('.medium-insert-embeds-active');
+    embed(html) {
+        let $place = this.$el.find('.medium-insert-embeds-active');
 
         if (!html) {
             alert('Incorrect URL format specified');
             return false;
         } else {
-            $place.after(this.templates['src/js/templates/embeds-wrapper.hbs']({
+            $place.after(Templates['embeds-wrapper.hbs']({
                 html: html
             }));
             $place.remove();
@@ -377,7 +326,7 @@
                 }
             }
         }
-    };
+    }
 
     /**
      * Convert bad oEmbed content to an actual line.
@@ -387,9 +336,9 @@
      *
      * @return {void}
      */
-    Embeds.prototype.convertBadEmbed = function (content) {
-        var $place, $empty, $content,
-            emptyTemplate = this.templates['src/js/templates/core-empty-line.hbs']().trim();
+    convertBadEmbed(content) {
+        let $place, $empty, $content,
+            emptyTemplate = Templates['core-empty-line.hbs']().trim();
 
         $place = this.$el.find('.medium-insert-embeds-active');
 
@@ -406,7 +355,7 @@
         this.$el.trigger('input');
 
         this.core.moveCaret($place);
-    };
+    }
 
     /**
      * Select clicked embed
@@ -414,10 +363,9 @@
      * @param {Event} e
      * @returns {void}
      */
-
-    Embeds.prototype.selectEmbed = function (e) {
-        if(this.core.options.enabled) {
-            var $embed = $(e.target).hasClass('medium-insert-embeds') ? $(e.target) : $(e.target).closest('.medium-insert-embeds'),
+    selectEmbed(e) {
+        if (this.core.options.enabled) {
+            let $embed = $(e.target).hasClass('medium-insert-embeds') ? $(e.target) : $(e.target).closest('.medium-insert-embeds'),
                 that = this;
 
             $embed.addClass('medium-insert-embeds-selected');
@@ -430,7 +378,7 @@
                 }
             }, 50);
         }
-    };
+    }
 
     /**
      * Unselect selected embed
@@ -438,9 +386,8 @@
      * @param {Event} e
      * @returns {void}
      */
-
-    Embeds.prototype.unselectEmbed = function (e) {
-        var $el = $(e.target).hasClass('medium-insert-embeds') ? $(e.target) : $(e.target).closest('.medium-insert-embeds'),
+    unselectEmbed(e) {
+        let $el = $(e.target).hasClass('medium-insert-embeds') ? $(e.target) : $(e.target).closest('.medium-insert-embeds'),
             $embed = this.$el.find('.medium-insert-embeds-selected');
 
         if ($el.hasClass('medium-insert-embeds-selected')) {
@@ -463,7 +410,7 @@
         } else if ($(e.target).is('figcaption') === false) {
             this.core.removeCaptions();
         }
-    };
+    }
 
     /**
      * Remove embed
@@ -471,9 +418,8 @@
      * @param {Event} e
      * @returns {void}
      */
-
-    Embeds.prototype.removeEmbed = function (e) {
-        var $embed, $empty;
+    removeEmbed(e) {
+        let $embed, $empty;
 
         if (e.which === 8 || e.which === 46) {
             $embed = this.$el.find('.medium-insert-embeds-selected');
@@ -483,7 +429,7 @@
 
                 $('.medium-insert-embeds-toolbar, .medium-insert-embeds-toolbar2').remove();
 
-                $empty = $(this.templates['src/js/templates/core-empty-line.hbs']().trim());
+                $empty = $(Templates['core-empty-line.hbs']().trim());
                 $embed.before($empty);
                 $embed.remove();
 
@@ -494,16 +440,15 @@
                 this.$el.trigger('input');
             }
         }
-    };
+    }
 
     /**
      * Adds embed toolbar to editor
      *
      * @returns {void}
      */
-
-    Embeds.prototype.addToolbar = function () {
-        var $embed = this.$el.find('.medium-insert-embeds-selected'),
+    addToolbar() {
+        let $embed = this.$el.find('.medium-insert-embeds-selected'),
             active = false,
             $toolbar, $toolbar2, top;
 
@@ -511,7 +456,7 @@
             return;
         }
 
-        $('body').append(this.templates['src/js/templates/embeds-toolbar.hbs']({
+        $('body').append(Templates['embeds-toolbar.hbs']({
             styles: this.options.styles,
             actions: this.options.actions
         }).trim());
@@ -539,7 +484,7 @@
             .show();
 
         $toolbar.find('button').each(function () {
-            if ($embed.hasClass('medium-insert-embeds-'+ $(this).data('action'))) {
+            if ($embed.hasClass('medium-insert-embeds-' + $(this).data('action'))) {
                 $(this).addClass('medium-editor-button-active');
                 active = true;
             }
@@ -548,7 +493,7 @@
         if (active === false) {
             $toolbar.find('button').first().addClass('medium-editor-button-active');
         }
-    };
+    }
 
     /**
      * Fires toolbar action
@@ -556,9 +501,8 @@
      * @param {Event} e
      * @returns {void}
      */
-
-    Embeds.prototype.toolbarAction = function (e) {
-        var $button = $(e.target).is('button') ? $(e.target) : $(e.target).closest('button'),
+    toolbarAction(e) {
+        let $button = $(e.target).is('button') ? $(e.target) : $(e.target).closest('button'),
             $li = $button.closest('li'),
             $ul = $li.closest('ul'),
             $lis = $ul.find('li'),
@@ -569,7 +513,7 @@
         $li.siblings().find('.medium-editor-button-active').removeClass('medium-editor-button-active');
 
         $lis.find('button').each(function () {
-            var className = 'medium-insert-embeds-'+ $(this).data('action');
+            let className = 'medium-insert-embeds-' + $(this).data('action');
 
             if ($(this).hasClass('medium-editor-button-active')) {
                 $embed.addClass(className);
@@ -587,7 +531,7 @@
         });
 
         this.$el.trigger('input');
-    };
+    }
 
     /**
      * Fires toolbar2 action
@@ -595,9 +539,8 @@
      * @param {Event} e
      * @returns {void}
      */
-
-    Embeds.prototype.toolbar2Action = function (e) {
-        var $button = $(e.target).is('button') ? $(e.target) : $(e.target).closest('button'),
+    toolbar2Action(e) {
+        let $button = $(e.target).is('button') ? $(e.target) : $(e.target).closest('button'),
             callback = this.options.actions[$button.data('action')].clicked;
 
         if (callback) {
@@ -605,16 +548,41 @@
         }
 
         this.$el.trigger('input');
-    };
+    }
+}
 
-    /** Plugin initialization */
+let defaults = {
+    label: '<span class="fa fa-youtube-play"></span>',
+    placeholder: 'Paste a YouTube, Vimeo, Facebook, Twitter or Instagram link and press Enter',
+    oembedProxy: 'http://medium.iframe.ly/api/oembed?iframe=1',
+    captions: true,
+    captionPlaceholder: 'Type caption (optional)',
+    styles: {
+        wide: {
+            label: '<span class="fa fa-align-justify"></span>',
+            // added: function ($el) {},
+            // removed: function ($el) {}
+        },
+        left: {
+            label: '<span class="fa fa-align-left"></span>',
+            // added: function ($el) {},
+            // removed: function ($el) {}
+        },
+        right: {
+            label: '<span class="fa fa-align-right"></span>',
+            // added: function ($el) {},
+            // removed: function ($el) {}
+        }
+    },
+    actions: {
+        remove: {
+            label: '<span class="fa fa-times"></span>',
+            clicked: function () {
+                let $event = $.Event('keydown');
 
-    $.fn[pluginName + addonName] = function (options) {
-        return this.each(function () {
-            if (!$.data(this, 'plugin_' + pluginName + addonName)) {
-                $.data(this, 'plugin_' + pluginName + addonName, new Embeds(this, options));
+                $event.which = 8;
+                $(document).trigger($event);
             }
-        });
-    };
-
-})(jQuery, window, document);
+        }
+    }
+}
