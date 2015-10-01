@@ -42,12 +42,5 @@ module.exports = {
                 loaders: ['style', 'css', 'sass']
             }
         ]
-    },
-    plugins: [
-        new webpack.ProvidePlugin({
-            $: "jquery",
-            jQuery: "jquery",
-            "window.jQuery": "jquery"
-        })
-    ]
+    }
 }

@@ -6,9 +6,9 @@ import 'sass/medium-editor-insert-plugin.scss'
 
 
 export default function init(jQuery) {
-    registerCore(jQuery)
     registerImages(jQuery)
     registerEmbeds(jQuery)
+    registerCore(jQuery)
 }
 
 export function registerCore($) {
