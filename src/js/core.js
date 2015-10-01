@@ -413,23 +413,51 @@ export default class Core {
      * @return {void}
      */
     positionButtons(activeAddon) {
-        var $buttons = this.$el.find('.medium-insert-buttons'),
+        let $buttons = this.$el.find('.medium-insert-buttons'),
             $p = this.$el.find('.medium-insert-active'),
-            $first = $p.find('figure:first').length ? $p.find('figure:first') : $p,
-            left, top;
+            $first = $p.find('figure:first').length ? $p.find('figure:first') : $p
 
         if ($p.length) {
+            let $addons = $buttons.find('.medium-insert-buttons-addons')
+            let addonsLeft = parseInt($addons
+                .css('left'), 10)
+            let buttonMarginLeft = parseInt($addons
+                    .find('a:first')
+                    .css('margin-left'),
+                10)
+            let buttonHeight = parseInt($buttons.find('.mediu'))
+            let pMarginTop = parseInt($p.css('margin-top'), 10)
 
-            left = $p.position().left - parseInt($buttons.find('.medium-insert-buttons-addons').css('left'), 10) - parseInt($buttons.find('.medium-insert-buttons-addons a:first').css('margin-left'), 10);
-            left = left < 0 ? $p.position().left : left;
-            top = $p.position().top + parseInt($p.css('margin-top'), 10);
+            let editorOffset = this.$el.offset()
+
+            // Get the position of paragraph inside the editor.
+            let pEditorOffset = {
+                left: $p.offset().left - this.$el.offset().left,
+                top: $p.offset().top - this.$el.offset().top
+            }
+
+            let editorPosition = this.$el.position()
+
+            let left = pEditorOffset.left
+                - addonsLeft
+                - buttonMarginLeft
+
+            // Don't let the buttons go outside the window.
+            if (editorOffset.left >= 0 && left < editorOffset.left / -1) {
+                left = editorOffset.left
+            }
+
+            left += editorPosition.left
+
+            let top = pEditorOffset.top
+                + editorPosition.top
 
             if (activeAddon) {
                 if ($p.position().left !== $first.position().left) {
                     left = $first.position().left;
                 }
 
-                top += $p.height() + 15; // 15px offset
+                //top += buttonHeight / 2; // 15px offset
             }
 
             $buttons.css({

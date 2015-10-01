@@ -1,3 +1,4 @@
+var webpack = require('webpack')
 var path = require('path')
 
 var rootPath = path.resolve(__dirname, './src'),
@@ -38,8 +39,15 @@ module.exports = {
             },
             {
                 test: /.scss$/,
-                loaders: ['style', 'css', 'sass'],
+                loaders: ['style', 'css', 'sass']
             }
         ]
-    }
+    },
+    plugins: [
+        new webpack.ProvidePlugin({
+            $: "jquery",
+            jQuery: "jquery",
+            "window.jQuery": "jquery"
+        })
+    ]
 }
