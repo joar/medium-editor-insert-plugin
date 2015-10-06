@@ -1,6 +1,6 @@
 {
   "name": "medium-editor-insert-plugin-webpack",
-  "version": "2.0.3",
+  "version": "2.0.6",
   "description": "webpack port of a jQuery insert plugin for MediumEditor",
   "license": "MIT",
   "homepage": "https://github.com/joar/medium-editor-insert-plugin",
